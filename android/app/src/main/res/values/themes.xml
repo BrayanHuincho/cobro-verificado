@@ -1,0 +1,11 @@
+<resources>
+    <style name="Tema.Lector" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/papel</item>
+    </style>
+
+    <style name="Tema.Lector.Arranque" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/sello</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Tema.Lector</item>
+    </style>
+</resources>
