@@ -155,7 +155,7 @@ cd android
 
 ## Contribuir
 
-Las propuestas son bienvenidas. Lee [CONTRIBUTING.md](CONTRIBUTING.md) antes de abrir un pull request.
+Las propuestas son bienvenidas: abre un issue o un pull request contra `main`. Antes de enviarlo, comprueba que pasen las pruebas de la sección Desarrollo.
 
 Lo que más ayuda ahora son ejemplos reales, con los datos tapados, del texto de las notificaciones de Yape y de los bancos que usan Plin.
 
