@@ -1,0 +1,65 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  secretos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/revisar_secretos.py
+
+  servicio:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: servicio
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: cobroverificado
+          POSTGRES_PASSWORD: prueba
+          POSTGRES_DB: cobroverificado
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cobroverificado"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      COBROVERIFICADO_DATABASE_URL: postgresql://cobroverificado:prueba@localhost:5432/cobroverificado
+      COBROVERIFICADO_TEST_DATABASE_URL: postgresql://cobroverificado:prueba@127.0.0.1:5432/cobroverificado
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest
+
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - run: ./gradlew --no-daemon assembleDebug testDebugUnitTest

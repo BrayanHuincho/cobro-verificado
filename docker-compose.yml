@@ -1,0 +1,50 @@
+x-servicio: &servicio
+  build: ./servicio
+  env_file: .env
+  depends_on:
+    postgres:
+      condition: service_healthy
+  volumes:
+    - imagenes:/var/lib/cobroverificado/imagenes
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cobroverificado}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:-cobroverificado}
+    volumes:
+      - datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    <<: *servicio
+    ports:
+      - "${COBROVERIFICADO_PUERTO:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/salud', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  worker:
+    <<: *servicio
+    command: ["python", "-m", "cobroverificado.trabajador"]
+    healthcheck:
+      test: ["CMD", "python", "-m", "cobroverificado.trabajador", "salud"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  datos:
+  imagenes:
